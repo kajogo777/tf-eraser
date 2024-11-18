@@ -101,7 +101,8 @@ func main() {
 	}
 
 	// Make HTTP request
-	resp, err := http.Post("http://localhost:4000/v1/commands/Terraform/transpile",
+	// resp, err := http.Post("http://localhost:4000/v1/commands/Terraform/transpile",
+	resp, err := http.Post("https://apiv2.stakpak.dev/v1/commands/Terraform/transpile",
 		"application/json",
 		bytes.NewBuffer(jsonData))
 	if err != nil {
