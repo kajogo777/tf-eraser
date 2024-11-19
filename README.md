@@ -1,4 +1,4 @@
-# tf-eraser
+# tf-eraser (alpha)
 
 A command-line tool that converts Terraform configuration files into Eraser DSL format for visualization.
 
