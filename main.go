@@ -127,5 +127,64 @@ func main() {
 	// Print parsed blocks
 	for _, block := range response.Result.Blocks {
 		fmt.Println(block.Code)
+		// Generate Eraser diagram if API key is available
+		if eraserAPIKey := os.Getenv("ERASER_API_KEY"); eraserAPIKey != "" {
+			fmt.Println("\nFound Eraser API key, generating diagram image URL...")
+			// Prepare request to Eraser API
+			eraserURL := "https://app.eraser.io/api/render/elements"
+			eraserReqBody := map[string]interface{}{
+				"elements": []map[string]interface{}{
+					{
+						"type":        "diagram",
+						"diagramType": "cloud-architecture-diagram",
+						"code":        block.Code,
+					},
+				},
+			}
+			eraserJSON, err := json.Marshal(eraserReqBody)
+			if err != nil {
+				fmt.Printf("Error preparing Eraser request: %v\n", err)
+				continue
+			}
+
+			// Create request
+			eraserReq, err := http.NewRequest("POST", eraserURL, bytes.NewBuffer(eraserJSON))
+			if err != nil {
+				fmt.Printf("Error creating Eraser request: %v\n", err)
+				continue
+			}
+
+			// Add headers
+			eraserReq.Header.Add("accept", "application/json")
+			eraserReq.Header.Add("content-type", "application/json")
+			eraserReq.Header.Add("authorization", "Bearer "+eraserAPIKey)
+
+			// Make request
+			eraserResp, err := http.DefaultClient.Do(eraserReq)
+			if err != nil {
+				fmt.Printf("Error making Eraser request: %v\n", err)
+				continue
+			}
+			defer eraserResp.Body.Close()
+
+			// Read response
+			eraserBody, err := io.ReadAll(eraserResp.Body)
+			if err != nil {
+				fmt.Printf("Error reading Eraser response: %v\n", err)
+				continue
+			}
+
+			// Parse response
+			var eraserResponse struct {
+				ImageURL            string `json:"imageUrl"`
+				CreateEraserFileURL string `json:"createEraserFileUrl"`
+			}
+			if err := json.Unmarshal(eraserBody, &eraserResponse); err != nil {
+				fmt.Printf("Error parsing Eraser response: %v\n", err)
+				continue
+			}
+
+			fmt.Printf("Eraser Diagram Image URL: %s\n", eraserResponse.ImageURL)
+		}
 	}
 }
